@@ -6,11 +6,13 @@ catalogs of frequency-domain waveform polarizations.
 ```python
 from pluscross import WaveformCatalog, save_catalog, load_catalog
 
-catalog = load_catalog("catalog.h5")
+catalog = WaveformCatalog.load("catalog.h5")
 catalog.frequencies    # (nfreq,) float64
 catalog.plus           # (nsamples, nfreq) complex128
 catalog.cross          # (nsamples, nfreq) complex128
 catalog.source_parameters  # dict[str, (nsamples,) float64]
+
+catalog.save("copy.h5")
 ```
 
 No derived quantities (e.g. polarization power) are computed here — consumers do
