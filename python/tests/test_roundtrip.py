@@ -13,7 +13,7 @@ from pluscross import (
 
 def make_catalog(nfreq: int = 8, nsamples: int = 5) -> WaveformCatalog:
     rng = np.random.default_rng(42)
-    shape = (nfreq, nsamples)
+    shape = (nsamples, nfreq)
     return WaveformCatalog(
         frequencies=np.linspace(5.0, 100.0, nfreq),
         plus=rng.standard_normal(shape) + 1j * rng.standard_normal(shape),
@@ -80,6 +80,12 @@ def test_constructor_validates_shapes():
             plus=catalog.plus,
             cross=catalog.cross,
         )
+    with pytest.raises(ValueError, match="strictly increasing"):
+        WaveformCatalog(
+            frequencies=catalog.frequencies[::-1],
+            plus=catalog.plus,
+            cross=catalog.cross,
+        )
     with pytest.raises(ValueError, match="redshift"):
         WaveformCatalog(
             frequencies=catalog.frequencies,
@@ -121,4 +127,13 @@ def test_load_rejects_missing_dataset(tmp_path):
     with h5py.File(path, "r+") as f:
         del f["polarizations/cross"]
     with pytest.raises(ValueError, match="polarizations/cross"):
+        load_catalog(path)
+
+
+def test_load_rejects_non_increasing_frequencies(tmp_path):
+    path = tmp_path / "catalog.h5"
+    save_catalog(path, make_catalog())
+    with h5py.File(path, "r+") as f:
+        f["frequencies"][...] = f["frequencies"][...][::-1]
+    with pytest.raises(ValueError, match="strictly increasing"):
         load_catalog(path)

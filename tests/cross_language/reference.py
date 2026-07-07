@@ -2,7 +2,7 @@
 
 All values are dyadic rationals or small integers so both languages construct
 bit-identical float64 arrays without sharing an RNG. Indices below are 0-based:
-``k`` runs over frequencies, ``j`` over samples.
+``j`` runs over samples and ``k`` over frequencies.
 """
 
 from __future__ import annotations
@@ -16,8 +16,8 @@ NSAMPLES = 7
 
 
 def reference_catalog() -> WaveformCatalog:
-    k = np.arange(NFREQ)[:, None]
-    j = np.arange(NSAMPLES)[None, :]
+    j = np.arange(NSAMPLES)[:, None]
+    k = np.arange(NFREQ)[None, :]
     return WaveformCatalog(
         frequencies=5.0 + 0.25 * np.arange(NFREQ),
         plus=(j * NFREQ + k) + 1j * (k - j),

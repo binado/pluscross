@@ -54,6 +54,10 @@ struct WaveformCatalog{P <: NamedTuple}
             throw(ArgumentError("plus $(size(plus)) and cross $(size(cross)) shapes differ"))
         size(plus, 1) == length(frequencies) ||
             throw(ArgumentError("polarization frequency axis ($(size(plus, 1))) does not match frequencies ($(length(frequencies)))"))
+        for i in 2:length(frequencies)
+            frequencies[i] > frequencies[i - 1] ||
+                throw(ArgumentError("frequencies must be strictly increasing"))
+        end
         n = size(plus, 2)
         for (name, values) in pairs(source_parameters)
             length(values) == n ||

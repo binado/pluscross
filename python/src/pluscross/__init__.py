@@ -28,8 +28,8 @@ _CHUNK_ELEMENTS = 2**22
 class WaveformCatalog:
     """In-memory frequency-domain waveform polarization catalog.
 
-    ``plus`` and ``cross`` have shape ``(nfreq, nsamples)`` — frequency axis
-    first, matching the on-disk frequency-contiguous layout.
+    ``plus`` and ``cross`` have shape ``(nsamples, nfreq)`` — sample axis
+    first, matching the on-disk C-order layout.
     """
 
     frequencies: NDArray[np.float64]
@@ -66,7 +66,7 @@ class WaveformCatalog:
 
     @property
     def nsamples(self) -> int:
-        return self.plus.shape[1]
+        return self.plus.shape[0]
 
 
 def _validate_arrays(
@@ -78,18 +78,20 @@ def _validate_arrays(
 ) -> None:
     if frequencies.ndim != 1:
         raise ValueError(f"{label}: frequencies must be one-dimensional")
+    if frequencies.shape[0] > 1 and not np.all(np.diff(frequencies) > 0.0):
+        raise ValueError(f"{label}: frequencies must be strictly increasing")
     if plus.ndim != 2 or cross.ndim != 2:
         raise ValueError(f"{label}: plus and cross must be two-dimensional")
     if plus.shape != cross.shape:
         raise ValueError(
             f"{label}: plus {plus.shape} and cross {cross.shape} shapes differ"
         )
-    if plus.shape[0] != frequencies.shape[0]:
+    if plus.shape[1] != frequencies.shape[0]:
         raise ValueError(
-            f"{label}: polarization frequency axis ({plus.shape[0]}) does not "
+            f"{label}: polarization frequency axis ({plus.shape[1]}) does not "
             f"match frequencies ({frequencies.shape[0]})"
         )
-    nsamples = plus.shape[1]
+    nsamples = plus.shape[0]
     for name, values in source_parameters.items():
         if values.ndim != 1 or values.shape[0] != nsamples:
             raise ValueError(
@@ -106,7 +108,7 @@ def _chunks(nsamples: int, nfreq: int) -> tuple[int, int]:
 
 def save_catalog(path: str | Path, catalog: WaveformCatalog) -> None:
     """Write ``catalog`` to ``path`` in waveform_catalog format v1."""
-    nfreq, nsamples = catalog.plus.shape
+    nsamples, nfreq = catalog.plus.shape
     with h5py.File(path, "w") as f:
         f.attrs["format_name"] = FORMAT_NAME
         f.attrs["format_version"] = np.int64(FORMAT_VERSION)
@@ -120,12 +122,10 @@ def save_catalog(path: str | Path, catalog: WaveformCatalog) -> None:
         f.create_dataset("frequencies", data=catalog.frequencies)
         pol = f.create_group("polarizations")
         chunks = _chunks(nsamples, nfreq)
-        # On-disk dataspace is (nsamples, nfreq) C-order; the in-memory
-        # (nfreq, nsamples) arrays map onto it as their transpose.
         for name, data in (("plus", catalog.plus), ("cross", catalog.cross)):
             pol.create_dataset(
                 name,
-                data=np.ascontiguousarray(data.T),
+                data=np.ascontiguousarray(data),
                 chunks=chunks,
                 compression="gzip",
             )
@@ -185,10 +185,8 @@ def load_catalog(path: str | Path) -> WaveformCatalog:
         }
 
         frequencies = np.asarray(_require_dataset(f, "frequencies", label)[...])
-        # Datasets are (nsamples, nfreq) on disk; .T is a zero-copy view giving
-        # the in-memory (nfreq, nsamples) orientation.
-        plus = np.asarray(_require_dataset(f, "polarizations/plus", label)[...]).T
-        cross = np.asarray(_require_dataset(f, "polarizations/cross", label)[...]).T
+        plus = np.asarray(_require_dataset(f, "polarizations/plus", label)[...])
+        cross = np.asarray(_require_dataset(f, "polarizations/cross", label)[...])
         source_parameters: dict[str, NDArray[np.float64]] = {}
         if "source_parameters" in f:
             group = f["source_parameters"]

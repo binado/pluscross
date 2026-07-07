@@ -8,8 +8,8 @@ from pluscross import WaveformCatalog, save_catalog, load_catalog
 
 catalog = load_catalog("catalog.h5")
 catalog.frequencies    # (nfreq,) float64
-catalog.plus           # (nfreq, nsamples) complex128
-catalog.cross          # (nfreq, nsamples) complex128
+catalog.plus           # (nsamples, nfreq) complex128
+catalog.cross          # (nsamples, nfreq) complex128
 catalog.source_parameters  # dict[str, (nsamples,) float64]
 ```
 
