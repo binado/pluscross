@@ -68,6 +68,15 @@ class WaveformCatalog:
     def nsamples(self) -> int:
         return self.plus.shape[0]
 
+    def save(self, path: str | Path) -> None:
+        """Write this catalog to ``path`` in waveform_catalog format v1."""
+        save_catalog(path, self)
+
+    @classmethod
+    def load(cls, path: str | Path) -> WaveformCatalog:
+        """Read a waveform_catalog v1 file into a catalog."""
+        return load_catalog(path)
+
 
 def _validate_arrays(
     frequencies: NDArray[np.float64],

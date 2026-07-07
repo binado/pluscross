@@ -30,12 +30,7 @@ def make_catalog(nfreq: int = 8, nsamples: int = 5) -> WaveformCatalog:
     )
 
 
-def test_roundtrip_bit_exact(tmp_path):
-    catalog = make_catalog()
-    path = tmp_path / "catalog.h5"
-    save_catalog(path, catalog)
-    loaded = load_catalog(path)
-
+def assert_catalog_equal(loaded: WaveformCatalog, catalog: WaveformCatalog) -> None:
     np.testing.assert_array_equal(loaded.frequencies, catalog.frequencies)
     np.testing.assert_array_equal(loaded.plus, catalog.plus)
     np.testing.assert_array_equal(loaded.cross, catalog.cross)
@@ -47,6 +42,24 @@ def test_roundtrip_bit_exact(tmp_path):
     assert loaded.maximum_frequency == catalog.maximum_frequency
     assert loaded.reference_frequency == catalog.reference_frequency
     assert loaded.sampling_frequency == catalog.sampling_frequency
+
+
+def test_roundtrip_bit_exact(tmp_path):
+    catalog = make_catalog()
+    path = tmp_path / "catalog.h5"
+    save_catalog(path, catalog)
+    loaded = load_catalog(path)
+
+    assert_catalog_equal(loaded, catalog)
+
+
+def test_method_roundtrip_bit_exact(tmp_path):
+    catalog = make_catalog()
+    path = tmp_path / "catalog.h5"
+    catalog.save(path)
+    loaded = WaveformCatalog.load(path)
+
+    assert_catalog_equal(loaded, catalog)
 
 
 def test_on_disk_layout(tmp_path):
