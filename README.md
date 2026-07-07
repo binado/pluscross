@@ -1,4 +1,4 @@
-# waveform-catalog
+# pluscross
 
 A standalone HDF5 format — and thin pure-IO implementations in Python and Julia —
 for **catalogs of frequency-domain gravitational-wave waveform polarizations**:
