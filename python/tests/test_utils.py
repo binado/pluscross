@@ -75,6 +75,18 @@ def test_in_band_mask_boundaries_are_inclusive():
                  minimum_frequency=1.0, maximum_frequency=5.0),
             "maximum_frequency",
         ),
+        (
+            # 0.25 * 10 = 2.5 samples: not an integer.
+            dict(sampling_frequency=10.0, duration=0.25,
+                 minimum_frequency=1.0, maximum_frequency=5.0),
+            "integer number of samples",
+        ),
+        (
+            # 0.3 * 10 = 3 samples: an odd integer.
+            dict(sampling_frequency=10.0, duration=0.3,
+                 minimum_frequency=1.0, maximum_frequency=5.0),
+            "even integer",
+        ),
     ],
 )
 def test_frequency_array_rejects_invalid_inputs(kwargs, match):

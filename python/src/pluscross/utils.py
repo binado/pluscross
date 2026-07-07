@@ -21,6 +21,10 @@ def frequency_array(
     the Nyquist frequency (``sampling_frequency / 2``) in steps of
     ``1 / duration``, and ``in_band_mask`` is ``True`` where
     ``minimum_frequency <= frequencies <= maximum_frequency``.
+
+    ``duration * sampling_frequency`` must be an even integer (the number of
+    time-domain samples), so the grid spacing is exactly ``1 / duration`` and
+    the last frequency lands exactly on the Nyquist frequency.
     """
     if sampling_frequency <= 0.0:
         raise ValueError(
@@ -37,7 +41,24 @@ def frequency_array(
             f"maximum_frequency={maximum_frequency}"
         )
 
-    n_samples = round(duration * sampling_frequency)
+    n_samples_exact = duration * sampling_frequency
+    n_samples = round(n_samples_exact)
+    tolerance = 4.0 * np.finfo(np.float64).eps * max(1.0, abs(n_samples_exact))
+    if abs(n_samples_exact - n_samples) > tolerance:
+        raise ValueError(
+            "duration * sampling_frequency must be an integer number of "
+            f"samples, got duration={duration}, "
+            f"sampling_frequency={sampling_frequency} "
+            f"({n_samples_exact} samples)"
+        )
+    if n_samples % 2 != 0:
+        raise ValueError(
+            "duration * sampling_frequency must be an even integer so the "
+            "frequency grid reaches the Nyquist frequency exactly, got "
+            f"{n_samples} samples (duration={duration}, "
+            f"sampling_frequency={sampling_frequency})"
+        )
+
     frequencies = np.fft.rfftfreq(n_samples, d=1.0 / sampling_frequency)
     in_band_mask = (frequencies >= minimum_frequency) & (
         frequencies <= maximum_frequency

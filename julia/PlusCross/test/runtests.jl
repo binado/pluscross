@@ -160,5 +160,13 @@ end
         @test_throws ArgumentError frequency_array(;
             sampling_frequency = 8.0, duration = 4.0,
             minimum_frequency = 1.0, maximum_frequency = 5.0)
+        # 0.25 * 10 = 2.5 samples: not an integer.
+        @test_throws ArgumentError frequency_array(;
+            sampling_frequency = 10.0, duration = 0.25,
+            minimum_frequency = 1.0, maximum_frequency = 5.0)
+        # 0.3 * 10 = 3 samples: an odd integer.
+        @test_throws ArgumentError frequency_array(;
+            sampling_frequency = 10.0, duration = 0.3,
+            minimum_frequency = 1.0, maximum_frequency = 5.0)
     end
 end
