@@ -3,7 +3,7 @@
 # bit-identical float64 arrays without sharing an RNG. `k`/`j` below are the
 # 0-based frequency/sample indices of the spec.
 
-using WaveformCatalogs
+using PlusCross
 
 const NFREQ = 16
 const NSAMPLES = 7

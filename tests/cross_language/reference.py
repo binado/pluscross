@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from waveform_catalog import WaveformCatalog
+from pluscross import WaveformCatalog
 
 NFREQ = 16
 NSAMPLES = 7

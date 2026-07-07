@@ -11,7 +11,7 @@ py() {
     (cd "$repo/python" && PYTHONPATH="$here" uv run --project . python "$here/$1" "$2")
 }
 jl() {
-    julia --project="$repo/julia/WaveformCatalogs" "$here/$1" "$2"
+    julia --project="$repo/julia/PlusCross" "$here/$1" "$2"
 }
 
 echo "== python writes, julia reads =="

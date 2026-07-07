@@ -1,6 +1,6 @@
 using Test
 using HDF5
-using WaveformCatalogs
+using PlusCross
 
 function make_catalog(; nfreq = 8, nsamples = 5)
     return WaveformCatalog(;

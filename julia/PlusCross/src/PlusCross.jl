@@ -1,12 +1,12 @@
 """
-    WaveformCatalogs
+    PlusCross
 
 IO for the `waveform_catalog` HDF5 format (see `SPEC.md` at the repo root):
 catalogs of frequency-domain waveform polarizations. Complex `h₊`/`hₓ` are stored
 on a shared frequency axis together with per-sample source parameters and the
 waveform-generation attributes. Pure IO: no derived quantities are computed here.
 """
-module WaveformCatalogs
+module PlusCross
 
 using HDF5
 

@@ -9,10 +9,10 @@ import sys
 import numpy as np
 from reference import reference_catalog
 
-from waveform_catalog import load_waveform_catalog
+from pluscross import load_catalog
 
 expected = reference_catalog()
-loaded = load_waveform_catalog(sys.argv[1])
+loaded = load_catalog(sys.argv[1])
 
 np.testing.assert_array_equal(loaded.frequencies, expected.frequencies)
 np.testing.assert_array_equal(loaded.plus, expected.plus)

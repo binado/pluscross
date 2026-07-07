@@ -14,7 +14,7 @@ import h5py
 import numpy as np
 from numpy.typing import NDArray
 
-__all__ = ["WaveformCatalog", "save_waveform_catalog", "load_waveform_catalog"]
+__all__ = ["WaveformCatalog", "save_catalog", "load_catalog"]
 
 FORMAT_NAME = "waveform_catalog"
 FORMAT_VERSION = 1
@@ -104,7 +104,7 @@ def _chunks(nsamples: int, nfreq: int) -> tuple[int, int]:
     return (per_chunk, nfreq)
 
 
-def save_waveform_catalog(path: str | Path, catalog: WaveformCatalog) -> None:
+def save_catalog(path: str | Path, catalog: WaveformCatalog) -> None:
     """Write ``catalog`` to ``path`` in waveform_catalog format v1."""
     nfreq, nsamples = catalog.plus.shape
     with h5py.File(path, "w") as f:
@@ -155,7 +155,7 @@ def _require_dataset(f: h5py.File, key: str, label: str) -> h5py.Dataset:
     return obj
 
 
-def load_waveform_catalog(path: str | Path) -> WaveformCatalog:
+def load_catalog(path: str | Path) -> WaveformCatalog:
     """Read a waveform_catalog v1 file into a :class:`WaveformCatalog`."""
     label = Path(path).name
     with h5py.File(path, "r") as f:

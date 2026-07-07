@@ -4,10 +4,10 @@ import h5py
 import numpy as np
 import pytest
 
-from waveform_catalog import (
+from pluscross import (
     WaveformCatalog,
-    load_waveform_catalog,
-    save_waveform_catalog,
+    load_catalog,
+    save_catalog,
 )
 
 
@@ -33,8 +33,8 @@ def make_catalog(nfreq: int = 8, nsamples: int = 5) -> WaveformCatalog:
 def test_roundtrip_bit_exact(tmp_path):
     catalog = make_catalog()
     path = tmp_path / "catalog.h5"
-    save_waveform_catalog(path, catalog)
-    loaded = load_waveform_catalog(path)
+    save_catalog(path, catalog)
+    loaded = load_catalog(path)
 
     np.testing.assert_array_equal(loaded.frequencies, catalog.frequencies)
     np.testing.assert_array_equal(loaded.plus, catalog.plus)
@@ -53,7 +53,7 @@ def test_on_disk_layout(tmp_path):
     """The spec's dataspace dims and complex compound convention, verified raw."""
     catalog = make_catalog(nfreq=8, nsamples=5)
     path = tmp_path / "catalog.h5"
-    save_waveform_catalog(path, catalog)
+    save_catalog(path, catalog)
     with h5py.File(path, "r") as f:
         plus = f["polarizations/plus"]
         assert plus.shape == (5, 8)  # (nsamples, nfreq) C-order
@@ -99,26 +99,26 @@ def test_constructor_validates_shapes():
 )
 def test_load_rejects_bad_attrs(tmp_path, attr, value, match):
     path = tmp_path / "catalog.h5"
-    save_waveform_catalog(path, make_catalog())
+    save_catalog(path, make_catalog())
     with h5py.File(path, "r+") as f:
         f.attrs[attr] = value
     with pytest.raises(ValueError, match=match):
-        load_waveform_catalog(path)
+        load_catalog(path)
 
 
 def test_load_rejects_missing_attr(tmp_path):
     path = tmp_path / "catalog.h5"
-    save_waveform_catalog(path, make_catalog())
+    save_catalog(path, make_catalog())
     with h5py.File(path, "r+") as f:
         del f.attrs["reference_frequency"]
     with pytest.raises(ValueError, match="reference_frequency"):
-        load_waveform_catalog(path)
+        load_catalog(path)
 
 
 def test_load_rejects_missing_dataset(tmp_path):
     path = tmp_path / "catalog.h5"
-    save_waveform_catalog(path, make_catalog())
+    save_catalog(path, make_catalog())
     with h5py.File(path, "r+") as f:
         del f["polarizations/cross"]
     with pytest.raises(ValueError, match="polarizations/cross"):
-        load_waveform_catalog(path)
+        load_catalog(path)

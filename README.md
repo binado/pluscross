@@ -5,9 +5,9 @@ for **catalogs of frequency-domain gravitational-wave waveform polarizations**:
 complex `h₊(f)`, `hₓ(f)` per source-parameter sample on a shared frequency axis.
 
 - **[`SPEC.md`](SPEC.md)** — the format definition (v1).
-- **[`python/`](python/)** — the `waveform_catalog` Python package (numpy + h5py).
-- **[`julia/WaveformCatalogs/`](julia/WaveformCatalogs/)** — the `WaveformCatalogs.jl`
-  Julia package (HDF5.jl).
+- **[`python/`](python/)** — the `pluscross` Python package (numpy + h5py).
+- **[`julia/PlusCross/`](julia/PlusCross/)** — the `PlusCross.jl` Julia package
+  (HDF5.jl).
 - **[`tests/cross_language/`](tests/cross_language/)** — bit-exact
   python-writes→julia-reads and julia-writes→python-reads round trips.
 
@@ -24,7 +24,7 @@ Nothing else: consumers compute derived quantities (e.g. polarization power
 cd python && uv run --extra test pytest tests/
 
 # Julia
-julia --project=julia/WaveformCatalogs -e 'using Pkg; Pkg.test()'
+julia --project=julia/PlusCross -e 'using Pkg; Pkg.test()'
 
 # Cross-language
 tests/cross_language/run.sh

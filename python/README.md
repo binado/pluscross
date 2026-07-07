@@ -1,12 +1,12 @@
-# waveform-catalog (Python)
+# pluscross (Python)
 
 Pure-IO implementation of the `waveform_catalog` HDF5 format (see `../SPEC.md`):
 catalogs of frequency-domain waveform polarizations.
 
 ```python
-from waveform_catalog import WaveformCatalog, save_waveform_catalog, load_waveform_catalog
+from pluscross import WaveformCatalog, save_catalog, load_catalog
 
-catalog = load_waveform_catalog("catalog.h5")
+catalog = load_catalog("catalog.h5")
 catalog.frequencies    # (nfreq,) float64
 catalog.plus           # (nfreq, nsamples) complex128
 catalog.cross          # (nfreq, nsamples) complex128
