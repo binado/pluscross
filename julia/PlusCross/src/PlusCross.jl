@@ -10,7 +10,9 @@ module PlusCross
 
 using HDF5
 
-export WaveformCatalog, save_catalog, load_catalog
+include("utils.jl")
+
+export WaveformCatalog, save_catalog, load_catalog, frequency_array
 
 const FORMAT_NAME = "waveform_catalog"
 const FORMAT_VERSION = 1

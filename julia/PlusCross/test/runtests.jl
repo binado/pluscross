@@ -116,3 +116,49 @@ end
         @test_throws ArgumentError load_catalog(path)
     end
 end
+
+@testset "frequency_array" begin
+    @testset "values" begin
+        frequencies, in_band_mask = frequency_array(;
+            sampling_frequency = 8.0, duration = 4.0,
+            minimum_frequency = 1.0, maximum_frequency = 3.0)
+        @test frequencies == collect(0:16) .* 0.25
+        @test in_band_mask == ((frequencies .>= 1.0) .& (frequencies .<= 3.0))
+    end
+
+    @testset "reaches nyquist when n_samples is even" begin
+        sampling_frequency = 8192.0
+        frequencies, _ = frequency_array(;
+            sampling_frequency = sampling_frequency, duration = 4.0,
+            minimum_frequency = 0.0, maximum_frequency = sampling_frequency / 2)
+        @test frequencies[end] == sampling_frequency / 2
+    end
+
+    @testset "in-band mask boundaries are inclusive" begin
+        frequencies, in_band_mask = frequency_array(;
+            sampling_frequency = 8.0, duration = 4.0,
+            minimum_frequency = 1.0, maximum_frequency = 3.0)
+        @test in_band_mask[findfirst(==(1.0), frequencies)]
+        @test in_band_mask[findfirst(==(3.0), frequencies)]
+        @test !in_band_mask[findfirst(==(0.75), frequencies)]
+        @test !in_band_mask[findfirst(==(3.25), frequencies)]
+    end
+
+    @testset "rejects invalid inputs" begin
+        @test_throws ArgumentError frequency_array(;
+            sampling_frequency = 0.0, duration = 4.0,
+            minimum_frequency = 1.0, maximum_frequency = 3.0)
+        @test_throws ArgumentError frequency_array(;
+            sampling_frequency = 8.0, duration = 0.0,
+            minimum_frequency = 1.0, maximum_frequency = 3.0)
+        @test_throws ArgumentError frequency_array(;
+            sampling_frequency = 8.0, duration = 4.0,
+            minimum_frequency = -1.0, maximum_frequency = 3.0)
+        @test_throws ArgumentError frequency_array(;
+            sampling_frequency = 8.0, duration = 4.0,
+            minimum_frequency = 3.0, maximum_frequency = 1.0)
+        @test_throws ArgumentError frequency_array(;
+            sampling_frequency = 8.0, duration = 4.0,
+            minimum_frequency = 1.0, maximum_frequency = 5.0)
+    end
+end
