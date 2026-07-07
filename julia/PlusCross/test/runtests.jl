@@ -71,6 +71,9 @@ end
         c.frequencies[1:(end - 1)], c.plus, c.cross, NamedTuple(),
         c.approximant, 5.0, 100.0, 20.0, 8192.0)
     @test_throws ArgumentError WaveformCatalog(
+        reverse(c.frequencies), c.plus, c.cross, NamedTuple(),
+        c.approximant, 5.0, 100.0, 20.0, 8192.0)
+    @test_throws ArgumentError WaveformCatalog(
         c.frequencies, c.plus, c.cross, (redshift = zeros(3),),
         c.approximant, 5.0, 100.0, 20.0, 8192.0)
 end
@@ -101,6 +104,14 @@ end
         save_catalog(path, catalog)
         h5open(path, "r+") do f
             delete_object(f, "polarizations/cross")
+        end
+        @test_throws ArgumentError load_catalog(path)
+
+        path = joinpath(dir, "bad_frequencies.h5")
+        save_catalog(path, catalog)
+        h5open(path, "r+") do f
+            delete_object(f, "frequencies")
+            write(f, "frequencies", reverse(catalog.frequencies))
         end
         @test_throws ArgumentError load_catalog(path)
     end

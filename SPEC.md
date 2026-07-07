@@ -49,11 +49,12 @@ The on-disk dataspace dims for polarizations are `(nsamples, nfreq)` in C
 (row-major) order, i.e. the frequency axis is contiguous. Consequences:
 
 - **h5py / NumPy** (row-major) sees polarization arrays with shape
-  `(nsamples, nfreq)` — its natural events-by-frequencies orientation — copy-free.
+  `(nsamples, nfreq)` — its natural samples-by-frequencies orientation — copy-free.
 - **HDF5.jl** (column-major) sees the same bytes as shape `(nfreq, nsamples)` —
   the column-major-friendly frequencies-by-samples orientation — also copy-free.
 
-Neither side transposes.
+Neither side transposes. Language APIs follow those native orientations: Python
+batches as `plus[batch, :]`, while Julia batches as `plus[:, batch]`.
 
 ### Chunking and compression
 
@@ -69,7 +70,7 @@ Loaders MUST verify, and report errors naming the offending file and object:
 
 - `format_name`, `format_version`, `domain` attributes present with the values above;
 - all five physics attributes present;
-- `/frequencies` is 1-D;
+- `/frequencies` is 1-D and strictly increasing;
 - `/polarizations/plus` and `/polarizations/cross` are 2-D with identical shape,
   and their frequency-axis length equals `len(frequencies)`;
 - every `/source_parameters/<name>` dataset has length `nsamples`.
