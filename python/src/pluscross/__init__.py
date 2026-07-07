@@ -14,7 +14,9 @@ import h5py
 import numpy as np
 from numpy.typing import NDArray
 
-__all__ = ["WaveformCatalog", "save_catalog", "load_catalog"]
+from .utils import frequency_array
+
+__all__ = ["WaveformCatalog", "save_catalog", "load_catalog", "frequency_array"]
 
 FORMAT_NAME = "waveform_catalog"
 FORMAT_VERSION = 1
