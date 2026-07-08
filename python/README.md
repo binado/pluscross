@@ -3,6 +3,20 @@
 Pure-IO implementation of the `waveform_catalog` HDF5 format (see `../SPEC.md`):
 catalogs of frequency-domain waveform polarizations.
 
+## Installation
+
+```sh
+pip install pluscross
+```
+
+From source:
+
+```sh
+git clone https://github.com/binado/pluscross
+cd pluscross/python
+uv sync --extra test
+```
+
 ```python
 import numpy as np
 

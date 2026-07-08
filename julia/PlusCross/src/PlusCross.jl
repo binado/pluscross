@@ -12,7 +12,7 @@ using HDF5
 
 include("utils.jl")
 
-export WaveformCatalog, save_catalog, load_catalog, frequency_array
+export WaveformCatalog, save_catalog, load_catalog, frequency_array, nfreq, nsamples
 
 const FORMAT_NAME = "waveform_catalog"
 const FORMAT_VERSION = 1
@@ -30,7 +30,7 @@ In-memory frequency-domain waveform polarization catalog.
 matching the on-disk frequency-contiguous layout. `source_parameters` is a
 `NamedTuple` of `Vector{Float64}` columns of length `nsamples`.
 """
-struct WaveformCatalog{P <: NamedTuple}
+struct WaveformCatalog{P<:NamedTuple}
     frequencies::Vector{Float64}
     plus::Matrix{ComplexF64}
     cross::Matrix{ComplexF64}
@@ -42,28 +42,35 @@ struct WaveformCatalog{P <: NamedTuple}
     sampling_frequency::Float64
 
     function WaveformCatalog(
-            frequencies::AbstractVector{<:Real},
-            plus::AbstractMatrix{<:Complex},
-            cross::AbstractMatrix{<:Complex},
-            source_parameters::P,
-            approximant::AbstractString,
-            minimum_frequency::Real,
-            maximum_frequency::Real,
-            reference_frequency::Real,
-            sampling_frequency::Real
-    ) where {P <: NamedTuple}
-        size(plus) == size(cross) ||
-            throw(ArgumentError("plus $(size(plus)) and cross $(size(cross)) shapes differ"))
-        size(plus, 1) == length(frequencies) ||
-            throw(ArgumentError("polarization frequency axis ($(size(plus, 1))) does not match frequencies ($(length(frequencies)))"))
+        frequencies::AbstractVector{<:Real},
+        plus::AbstractMatrix{<:Complex},
+        cross::AbstractMatrix{<:Complex},
+        source_parameters::P,
+        approximant::AbstractString,
+        minimum_frequency::Real,
+        maximum_frequency::Real,
+        reference_frequency::Real,
+        sampling_frequency::Real,
+    ) where {P<:NamedTuple}
+        size(plus) == size(cross) || throw(
+            ArgumentError("plus $(size(plus)) and cross $(size(cross)) shapes differ")
+        )
+        size(plus, 1) == length(frequencies) || throw(
+            ArgumentError(
+                "polarization frequency axis ($(size(plus, 1))) does not match frequencies ($(length(frequencies)))",
+            ),
+        )
         for i in 2:length(frequencies)
             frequencies[i] > frequencies[i - 1] ||
                 throw(ArgumentError("frequencies must be strictly increasing"))
         end
         n = size(plus, 2)
         for (name, values) in pairs(source_parameters)
-            length(values) == n ||
-                throw(ArgumentError("source parameter $(name) must have length $(n), got $(length(values))"))
+            length(values) == n || throw(
+                ArgumentError(
+                    "source parameter $(name) must have length $(n), got $(length(values))",
+                ),
+            )
         end
         params = map(v -> Vector{Float64}(v), source_parameters)
         return new{typeof(params)}(
@@ -75,21 +82,21 @@ struct WaveformCatalog{P <: NamedTuple}
             Float64(minimum_frequency),
             Float64(maximum_frequency),
             Float64(reference_frequency),
-            Float64(sampling_frequency)
+            Float64(sampling_frequency),
         )
     end
 end
 
 function WaveformCatalog(;
-        frequencies,
-        plus,
-        cross,
-        source_parameters = NamedTuple(),
-        approximant,
-        minimum_frequency,
-        maximum_frequency,
-        reference_frequency,
-        sampling_frequency
+    frequencies,
+    plus,
+    cross,
+    source_parameters=NamedTuple(),
+    approximant,
+    minimum_frequency,
+    maximum_frequency,
+    reference_frequency,
+    sampling_frequency,
 )
     return WaveformCatalog(
         frequencies,
@@ -100,11 +107,22 @@ function WaveformCatalog(;
         minimum_frequency,
         maximum_frequency,
         reference_frequency,
-        sampling_frequency
+        sampling_frequency,
     )
 end
 
+"""
+    nfreq(catalog) -> Int
+
+Number of frequency-axis samples (`length(catalog.frequencies)`).
+"""
 nfreq(c::WaveformCatalog) = length(c.frequencies)
+
+"""
+    nsamples(catalog) -> Int
+
+Number of per-sample draws (`size(catalog.plus, 2)`).
+"""
 nsamples(c::WaveformCatalog) = size(c.plus, 2)
 
 """In-file chunk dims (Julia order): full frequency axis × bounded sample count."""
@@ -136,8 +154,7 @@ function save_catalog(path::AbstractString, catalog::WaveformCatalog)
         for (name, data) in (("plus", catalog.plus), ("cross", catalog.cross))
             # Julia's (nfreq, nsamples) column-major matrix lands on disk as the
             # spec's (nsamples, nfreq) C-order dataspace with no transpose.
-            dset = create_dataset(
-                pol, name, ComplexF64, size(data); chunk = chunk, deflate = 3)
+            dset = create_dataset(pol, name, ComplexF64, size(data); chunk=chunk, deflate=3)
             write(dset, data)
         end
         params = create_group(f, "source_parameters")
@@ -155,8 +172,7 @@ function _require_attr(a, name::AbstractString, label::AbstractString)
 end
 
 function _require_dataset(f, key::AbstractString, label::AbstractString)
-    haskey(f, key) ||
-        throw(ArgumentError("$(label): missing required object '$(key)'"))
+    haskey(f, key) || throw(ArgumentError("$(label): missing required object '$(key)'"))
     return f[key]
 end
 
@@ -170,14 +186,23 @@ function load_catalog(path::AbstractString)
     h5open(path, "r") do f
         a = attributes(f)
         format_name = String(_require_attr(a, "format_name", label))
-        format_name == FORMAT_NAME ||
-            throw(ArgumentError("$(label): format_name is '$(format_name)', expected '$(FORMAT_NAME)'"))
+        format_name == FORMAT_NAME || throw(
+            ArgumentError(
+                "$(label): format_name is '$(format_name)', expected '$(FORMAT_NAME)'"
+            ),
+        )
         version = Int(_require_attr(a, "format_version", label))
-        version == FORMAT_VERSION ||
-            throw(ArgumentError("$(label): format_version is $(version), expected $(FORMAT_VERSION)"))
+        version == FORMAT_VERSION || throw(
+            ArgumentError(
+                "$(label): format_version is $(version), expected $(FORMAT_VERSION)"
+            ),
+        )
         domain = String(_require_attr(a, "domain", label))
-        domain == DOMAIN_FREQUENCY ||
-            throw(ArgumentError("$(label): domain is '$(domain)', expected '$(DOMAIN_FREQUENCY)'"))
+        domain == DOMAIN_FREQUENCY || throw(
+            ArgumentError(
+                "$(label): domain is '$(domain)', expected '$(DOMAIN_FREQUENCY)'"
+            ),
+        )
         approximant = String(_require_attr(a, "approximant", label))
         minimum_frequency = Float64(_require_attr(a, "minimum_frequency", label))
         maximum_frequency = Float64(_require_attr(a, "maximum_frequency", label))
@@ -186,8 +211,7 @@ function load_catalog(path::AbstractString)
 
         frequencies = Vector{Float64}(read(_require_dataset(f, "frequencies", label)))
         plus = Matrix{ComplexF64}(read(_require_dataset(f, "polarizations/plus", label)))
-        cross = Matrix{ComplexF64}(read(_require_dataset(
-            f, "polarizations/cross", label)))
+        cross = Matrix{ComplexF64}(read(_require_dataset(f, "polarizations/cross", label)))
 
         param_keys = Symbol[]
         param_vecs = Vector{Float64}[]
@@ -210,11 +234,10 @@ function load_catalog(path::AbstractString)
                 minimum_frequency,
                 maximum_frequency,
                 reference_frequency,
-                sampling_frequency
+                sampling_frequency,
             )
         catch err
-            err isa ArgumentError &&
-                throw(ArgumentError("$(label): $(err.msg)"))
+            err isa ArgumentError && throw(ArgumentError("$(label): $(err.msg)"))
             rethrow()
         end
     end
