@@ -47,4 +47,5 @@ jobs:
       - uses: julia-actions/setup-julia@v2
         with:
           version: "1.10"
+      - run: julia --project=julia/PlusCross -e 'using Pkg; Pkg.instantiate()'
       - run: tests/cross_language/run.sh
