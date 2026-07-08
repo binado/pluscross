@@ -8,6 +8,7 @@ waveform-generation attributes. Pure IO: no derived quantities are computed here
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from importlib.metadata import version as _version
 from pathlib import Path
 
 import h5py
@@ -16,7 +17,15 @@ from numpy.typing import NDArray
 
 from .utils import frequency_array
 
-__all__ = ["WaveformCatalog", "save_catalog", "load_catalog", "frequency_array"]
+__version__ = _version("pluscross")
+
+__all__ = [
+    "WaveformCatalog",
+    "save_catalog",
+    "load_catalog",
+    "frequency_array",
+    "__version__",
+]
 
 FORMAT_NAME = "waveform_catalog"
 FORMAT_VERSION = 1
@@ -172,8 +181,9 @@ def load_catalog(path: str | Path) -> WaveformCatalog:
     with h5py.File(path, "r") as f:
         format_name = str(_require_attr(f, "format_name", label))
         if format_name != FORMAT_NAME:
-            raise ValueError(f"{label}: format_name is {format_name!r}, "
-                             f"expected {FORMAT_NAME!r}")
+            raise ValueError(
+                f"{label}: format_name is {format_name!r}, expected {FORMAT_NAME!r}"
+            )
         version = int(_require_attr(f, "format_version", label))
         if version != FORMAT_VERSION:
             raise ValueError(

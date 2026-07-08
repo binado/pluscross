@@ -1,7 +1,6 @@
 __pycache__/
 *.egg-info/
 .venv/
-uv.lock
 Manifest.toml
 .pytest_cache/
 *.md
@@ -9,3 +8,4 @@ Manifest.toml
 !SPEC.md
 !AGENTS.md
 !CLAUDE.md
+!CHANGELOG.md

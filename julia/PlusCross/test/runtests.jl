@@ -2,20 +2,20 @@ using Test
 using HDF5
 using PlusCross
 
-function make_catalog(; nfreq = 8, nsamples = 5)
+function make_catalog(; nfreq=8, nsamples=5)
     return WaveformCatalog(;
-        frequencies = collect(range(5.0, 100.0; length = nfreq)),
-        plus = randn(nfreq, nsamples) .+ im .* randn(nfreq, nsamples),
-        cross = randn(nfreq, nsamples) .+ im .* randn(nfreq, nsamples),
-        source_parameters = (
-            redshift = rand(nsamples) .* 2.0,
-            luminosity_distance = 100.0 .+ rand(nsamples) .* 4900.0
+        frequencies=collect(range(5.0, 100.0; length=nfreq)),
+        plus=randn(nfreq, nsamples) .+ im .* randn(nfreq, nsamples),
+        cross=randn(nfreq, nsamples) .+ im .* randn(nfreq, nsamples),
+        source_parameters=(
+            redshift=rand(nsamples) .* 2.0,
+            luminosity_distance=100.0 .+ rand(nsamples) .* 4900.0,
         ),
-        approximant = "IMRPhenomXAS_NRTidalv3",
-        minimum_frequency = 5.0,
-        maximum_frequency = 100.0,
-        reference_frequency = 20.0,
-        sampling_frequency = 8192.0
+        approximant="IMRPhenomXAS_NRTidalv3",
+        minimum_frequency=5.0,
+        maximum_frequency=100.0,
+        reference_frequency=20.0,
+        sampling_frequency=8192.0,
     )
 end
 
@@ -43,7 +43,7 @@ end
 end
 
 @testset "on-disk layout matches the spec" begin
-    catalog = make_catalog(nfreq = 8, nsamples = 5)
+    catalog = make_catalog(nfreq=8, nsamples=5)
     mktempdir() do dir
         path = joinpath(dir, "catalog.h5")
         save_catalog(path, catalog)
@@ -65,25 +65,56 @@ end
 @testset "constructor validates shapes" begin
     c = make_catalog()
     @test_throws ArgumentError WaveformCatalog(
-        c.frequencies, c.plus, c.cross[:, 1:(end - 1)], NamedTuple(),
-        c.approximant, 5.0, 100.0, 20.0, 8192.0)
+        c.frequencies,
+        c.plus,
+        c.cross[:, 1:(end - 1)],
+        NamedTuple(),
+        c.approximant,
+        5.0,
+        100.0,
+        20.0,
+        8192.0,
+    )
     @test_throws ArgumentError WaveformCatalog(
-        c.frequencies[1:(end - 1)], c.plus, c.cross, NamedTuple(),
-        c.approximant, 5.0, 100.0, 20.0, 8192.0)
+        c.frequencies[1:(end - 1)],
+        c.plus,
+        c.cross,
+        NamedTuple(),
+        c.approximant,
+        5.0,
+        100.0,
+        20.0,
+        8192.0,
+    )
     @test_throws ArgumentError WaveformCatalog(
-        reverse(c.frequencies), c.plus, c.cross, NamedTuple(),
-        c.approximant, 5.0, 100.0, 20.0, 8192.0)
+        reverse(c.frequencies),
+        c.plus,
+        c.cross,
+        NamedTuple(),
+        c.approximant,
+        5.0,
+        100.0,
+        20.0,
+        8192.0,
+    )
     @test_throws ArgumentError WaveformCatalog(
-        c.frequencies, c.plus, c.cross, (redshift = zeros(3),),
-        c.approximant, 5.0, 100.0, 20.0, 8192.0)
+        c.frequencies,
+        c.plus,
+        c.cross,
+        (redshift=zeros(3),),
+        c.approximant,
+        5.0,
+        100.0,
+        20.0,
+        8192.0,
+    )
 end
 
 @testset "loader rejects invalid files" begin
     catalog = make_catalog()
     mktempdir() do dir
         for (attr, value) in
-            (("domain", "time"), ("format_version", Int64(2)),
-                ("format_name", "other"))
+            (("domain", "time"), ("format_version", Int64(2)), ("format_name", "other"))
             path = joinpath(dir, "bad_$(attr).h5")
             save_catalog(path, catalog)
             h5open(path, "r+") do f
@@ -120,8 +151,11 @@ end
 @testset "frequency_array" begin
     @testset "values" begin
         frequencies, in_band_mask = frequency_array(;
-            sampling_frequency = 8.0, duration = 4.0,
-            minimum_frequency = 1.0, maximum_frequency = 3.0)
+            sampling_frequency=8.0,
+            duration=4.0,
+            minimum_frequency=1.0,
+            maximum_frequency=3.0,
+        )
         @test frequencies == collect(0:16) .* 0.25
         @test in_band_mask == ((frequencies .>= 1.0) .& (frequencies .<= 3.0))
     end
@@ -129,15 +163,21 @@ end
     @testset "reaches nyquist when n_samples is even" begin
         sampling_frequency = 8192.0
         frequencies, _ = frequency_array(;
-            sampling_frequency = sampling_frequency, duration = 4.0,
-            minimum_frequency = 0.0, maximum_frequency = sampling_frequency / 2)
+            sampling_frequency=sampling_frequency,
+            duration=4.0,
+            minimum_frequency=0.0,
+            maximum_frequency=sampling_frequency / 2,
+        )
         @test frequencies[end] == sampling_frequency / 2
     end
 
     @testset "in-band mask boundaries are inclusive" begin
         frequencies, in_band_mask = frequency_array(;
-            sampling_frequency = 8.0, duration = 4.0,
-            minimum_frequency = 1.0, maximum_frequency = 3.0)
+            sampling_frequency=8.0,
+            duration=4.0,
+            minimum_frequency=1.0,
+            maximum_frequency=3.0,
+        )
         @test in_band_mask[findfirst(==(1.0), frequencies)]
         @test in_band_mask[findfirst(==(3.0), frequencies)]
         @test !in_band_mask[findfirst(==(0.75), frequencies)]
@@ -146,27 +186,48 @@ end
 
     @testset "rejects invalid inputs" begin
         @test_throws ArgumentError frequency_array(;
-            sampling_frequency = 0.0, duration = 4.0,
-            minimum_frequency = 1.0, maximum_frequency = 3.0)
+            sampling_frequency=0.0,
+            duration=4.0,
+            minimum_frequency=1.0,
+            maximum_frequency=3.0,
+        )
         @test_throws ArgumentError frequency_array(;
-            sampling_frequency = 8.0, duration = 0.0,
-            minimum_frequency = 1.0, maximum_frequency = 3.0)
+            sampling_frequency=8.0,
+            duration=0.0,
+            minimum_frequency=1.0,
+            maximum_frequency=3.0,
+        )
         @test_throws ArgumentError frequency_array(;
-            sampling_frequency = 8.0, duration = 4.0,
-            minimum_frequency = -1.0, maximum_frequency = 3.0)
+            sampling_frequency=8.0,
+            duration=4.0,
+            minimum_frequency=-1.0,
+            maximum_frequency=3.0,
+        )
         @test_throws ArgumentError frequency_array(;
-            sampling_frequency = 8.0, duration = 4.0,
-            minimum_frequency = 3.0, maximum_frequency = 1.0)
+            sampling_frequency=8.0,
+            duration=4.0,
+            minimum_frequency=3.0,
+            maximum_frequency=1.0,
+        )
         @test_throws ArgumentError frequency_array(;
-            sampling_frequency = 8.0, duration = 4.0,
-            minimum_frequency = 1.0, maximum_frequency = 5.0)
+            sampling_frequency=8.0,
+            duration=4.0,
+            minimum_frequency=1.0,
+            maximum_frequency=5.0,
+        )
         # 0.25 * 10 = 2.5 samples: not an integer.
         @test_throws ArgumentError frequency_array(;
-            sampling_frequency = 10.0, duration = 0.25,
-            minimum_frequency = 1.0, maximum_frequency = 5.0)
+            sampling_frequency=10.0,
+            duration=0.25,
+            minimum_frequency=1.0,
+            maximum_frequency=5.0,
+        )
         # 0.3 * 10 = 3 samples: an odd integer.
         @test_throws ArgumentError frequency_array(;
-            sampling_frequency = 10.0, duration = 0.3,
-            minimum_frequency = 1.0, maximum_frequency = 5.0)
+            sampling_frequency=10.0,
+            duration=0.3,
+            minimum_frequency=1.0,
+            maximum_frequency=5.0,
+        )
     end
 end

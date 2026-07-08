@@ -4,17 +4,38 @@ version = "0.1.0"
 description = "IO for the waveform_catalog HDF5 format: frequency-domain waveform polarization catalogs"
 readme = "README.md"
 requires-python = ">=3.11"
+authors = [{ name = "Bernardo Veronese", email = "bernardopveronese@gmail.com" }]
+license = "MIT"
+keywords = ["gravitational-waves", "hdf5", "waveforms"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics",
+]
 dependencies = [
     "numpy>=1.26",
     "h5py>=3.10",
 ]
 
+[project.urls]
+Repository = "https://github.com/binado/pluscross"
+Issues = "https://github.com/binado/pluscross/issues"
+
 [project.optional-dependencies]
 test = ["pytest>=8"]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[dependency-groups]
+dev = ["ruff>=0.9", "ty>=0.0.1a"]
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/pluscross"]
+[build-system]
+requires = ["uv_build>=0.11,<0.12"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

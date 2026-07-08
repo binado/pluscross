@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    defaults:
+      run:
+        working-directory: python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv run --extra test ruff check .
+      - run: uv run --extra test ruff format --check .
+      - run: uv run --group dev ty check src
+      - run: uv run --extra test pytest tests/
+
+  julia:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.10"
+      - name: Check formatting (Blue style)
+        run: |
+          julia -e 'using Pkg; Pkg.add("JuliaFormatter"); using JuliaFormatter; exit(format("julia/PlusCross"; style=BlueStyle(), verbose=true) ? 0 : 1)'
+      - uses: julia-actions/julia-runtest@v1
+        with:
+          project: julia/PlusCross
+
+  cross-language:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.10"
+      - run: tests/cross_language/run.sh

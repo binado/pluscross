@@ -3,6 +3,26 @@
 Pure-IO implementation of the `waveform_catalog` HDF5 format (see
 `../../SPEC.md`): catalogs of frequency-domain waveform polarizations.
 
+## Installation
+
+```julia
+pkg> add PlusCross
+```
+
+<!-- TODO: drop this note once PlusCross is registered in the Julia General
+registry. Until then, `add PlusCross` above will not resolve; install
+directly from the repo instead: -->
+
+```julia
+pkg> add https://github.com/binado/pluscross:julia/PlusCross
+```
+
+From source:
+
+```julia
+pkg> dev https://github.com/binado/pluscross:julia/PlusCross
+```
+
 ```julia
 using PlusCross
 
