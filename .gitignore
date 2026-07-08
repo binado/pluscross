@@ -4,3 +4,8 @@ __pycache__/
 uv.lock
 Manifest.toml
 .pytest_cache/
+*.md
+!**/README.md
+!SPEC.md
+!AGENTS.md
+!CLAUDE.md
