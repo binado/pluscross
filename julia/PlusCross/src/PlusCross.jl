@@ -132,11 +132,25 @@ function _chunk_dims(nf::Int, ns::Int)
 end
 
 """
-    save_catalog(path, catalog)
+    save_catalog(path, catalog; compression=nothing)
 
 Write `catalog` to `path` in waveform_catalog format v1.
+
+Polarization datasets are uncompressed by default. Pass `compression="gzip"`
+to opt into gzip/deflate compression.
 """
-function save_catalog(path::AbstractString, catalog::WaveformCatalog)
+function save_catalog(
+    path::AbstractString,
+    catalog::WaveformCatalog;
+    compression::Union{Nothing,AbstractString}=nothing,
+)
+    if compression !== nothing && compression != "gzip"
+        throw(
+            ArgumentError(
+                "unsupported compression $(repr(compression)); use nothing or \"gzip\""
+            ),
+        )
+    end
     h5open(path, "w") do f
         a = attributes(f)
         a["format_name"] = FORMAT_NAME
@@ -151,10 +165,12 @@ function save_catalog(path::AbstractString, catalog::WaveformCatalog)
         write(f, "frequencies", catalog.frequencies)
         pol = create_group(f, "polarizations")
         chunk = _chunk_dims(nfreq(catalog), nsamples(catalog))
+        dataset_kwargs =
+            compression == "gzip" ? (; chunk=chunk, deflate=3) : (; chunk=chunk)
         for (name, data) in (("plus", catalog.plus), ("cross", catalog.cross))
             # Julia's (nfreq, nsamples) column-major matrix lands on disk as the
             # spec's (nsamples, nfreq) C-order dataspace with no transpose.
-            dset = create_dataset(pol, name, ComplexF64, size(data); chunk=chunk, deflate=3)
+            dset = create_dataset(pol, name, ComplexF64, size(data); dataset_kwargs...)
             write(dset, data)
         end
         params = create_group(f, "source_parameters")

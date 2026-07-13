@@ -62,6 +62,32 @@ end
     end
 end
 
+@testset "compression is opt-in" begin
+    catalog = make_catalog()
+    mktempdir() do dir
+        default_path = joinpath(dir, "default.h5")
+        save_catalog(default_path, catalog)
+        h5open(default_path, "r") do f
+            dcpl = HDF5.get_create_properties(f["polarizations/plus"])
+            @test length(dcpl.filters) == 0
+        end
+        @test load_catalog(default_path).plus == catalog.plus
+
+        gzip_path = joinpath(dir, "gzip.h5")
+        save_catalog(gzip_path, catalog; compression="gzip")
+        h5open(gzip_path, "r") do f
+            dcpl = HDF5.get_create_properties(f["polarizations/plus"])
+            @test length(dcpl.filters) == 1
+        end
+        loaded = load_catalog(gzip_path)
+        @test loaded.plus == catalog.plus
+        @test loaded.cross == catalog.cross
+
+        bad_path = joinpath(dir, "bad.h5")
+        @test_throws ArgumentError save_catalog(bad_path, catalog; compression="lz4")
+    end
+end
+
 @testset "constructor validates shapes" begin
     c = make_catalog()
     @test_throws ArgumentError WaveformCatalog(

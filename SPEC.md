@@ -59,10 +59,16 @@ batches as `plus[batch, :]`, while Julia batches as `plus[:, batch]`.
 ### Chunking and compression
 
 Polarization datasets are chunked along the sample axis — each chunk holds the
-full frequency axis for a bounded number of samples — and gzip-compressed.
-Writers choose the chunk sample count (this implementation uses
+full frequency axis for a bounded number of samples. Writers choose the chunk
+sample count (this implementation uses
 `min(nsamples, max(1, 2**22 ÷ nfreq))`, targeting ~64 MiB uncompressed chunks);
 readers must not rely on a specific chunk shape.
+
+Compression is optional and writer-chosen. It defaults to uncompressed, since
+complex frequency-domain strains are effectively incompressible and gzip spends
+significant CPU for little size benefit; writers may opt into a compression
+filter (for example gzip). Readers MUST handle both compressed and uncompressed
+polarization datasets.
 
 ### Load-time validation
 

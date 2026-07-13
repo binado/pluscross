@@ -79,9 +79,9 @@ class WaveformCatalog:
     def nsamples(self) -> int:
         return self.plus.shape[0]
 
-    def save(self, path: str | Path) -> None:
+    def save(self, path: str | Path, *, compression: str | None = None) -> None:
         """Write this catalog to ``path`` in waveform_catalog format v1."""
-        save_catalog(path, self)
+        save_catalog(path, self, compression=compression)
 
     @classmethod
     def load(cls, path: str | Path) -> WaveformCatalog:
@@ -126,8 +126,17 @@ def _chunks(nsamples: int, nfreq: int) -> tuple[int, int]:
     return (per_chunk, nfreq)
 
 
-def save_catalog(path: str | Path, catalog: WaveformCatalog) -> None:
-    """Write ``catalog`` to ``path`` in waveform_catalog format v1."""
+def save_catalog(
+    path: str | Path,
+    catalog: WaveformCatalog,
+    *,
+    compression: str | None = None,
+) -> None:
+    """Write ``catalog`` to ``path`` in waveform_catalog format v1.
+
+    Polarization datasets are uncompressed by default. Pass ``compression``
+    (for example ``"gzip"``) to opt into an HDF5 compression filter.
+    """
     nsamples, nfreq = catalog.plus.shape
     with h5py.File(path, "w") as f:
         f.attrs["format_name"] = FORMAT_NAME
@@ -142,12 +151,14 @@ def save_catalog(path: str | Path, catalog: WaveformCatalog) -> None:
         f.create_dataset("frequencies", data=catalog.frequencies)
         pol = f.create_group("polarizations")
         chunks = _chunks(nsamples, nfreq)
+        dataset_kwargs: dict[str, object] = {"chunks": chunks}
+        if compression is not None:
+            dataset_kwargs["compression"] = compression
         for name, data in (("plus", catalog.plus), ("cross", catalog.cross)):
             pol.create_dataset(
                 name,
                 data=np.ascontiguousarray(data),
-                chunks=chunks,
-                compression="gzip",
+                **dataset_kwargs,
             )
         params = f.create_group("source_parameters")
         for name, values in catalog.source_parameters.items():
@@ -160,7 +171,7 @@ def _require_attr(f: h5py.File, name: str, label: str) -> str | int | float:
     value = f.attrs[name]
     if isinstance(value, bytes):
         return value.decode()
-    if isinstance(value, (str, int, float, np.integer, np.floating)):
+    if isinstance(value, str | int | float | np.integer | np.floating):
         # np.integer/np.floating satisfy int()/float(); plain cast for typing.
         return value  # type: ignore[return-value]
     raise ValueError(f"{label}: attribute {name!r} has unsupported type")

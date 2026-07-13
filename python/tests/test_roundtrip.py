@@ -71,12 +71,37 @@ def test_on_disk_layout(tmp_path):
         plus = f["polarizations/plus"]
         assert plus.shape == (5, 8)  # (nsamples, nfreq) C-order
         assert plus.dtype == np.complex128
-        assert plus.compression == "gzip"
+        assert plus.compression is None
         assert f.attrs["format_name"] == "waveform_catalog"
         assert int(f.attrs["format_version"]) == 1
         assert f.attrs["domain"] == "frequency"
         assert f["frequencies"].shape == (8,)
         assert f["source_parameters/redshift"].shape == (5,)
+
+
+def test_gzip_roundtrip_and_filter(tmp_path):
+    catalog = make_catalog()
+    path = tmp_path / "catalog.h5"
+    save_catalog(path, catalog, compression="gzip")
+    with h5py.File(path, "r") as f:
+        assert f["polarizations/plus"].compression == "gzip"
+        assert f["polarizations/cross"].compression == "gzip"
+    assert_catalog_equal(load_catalog(path), catalog)
+
+
+def test_method_gzip_roundtrip(tmp_path):
+    catalog = make_catalog()
+    path = tmp_path / "catalog.h5"
+    catalog.save(path, compression="gzip")
+    with h5py.File(path, "r") as f:
+        assert f["polarizations/plus"].compression == "gzip"
+    assert_catalog_equal(load_catalog(path), catalog)
+
+
+def test_invalid_compression_raises(tmp_path):
+    path = tmp_path / "catalog.h5"
+    with pytest.raises(ValueError):
+        save_catalog(path, make_catalog(), compression="not-a-filter")
 
 
 def test_constructor_validates_shapes():
