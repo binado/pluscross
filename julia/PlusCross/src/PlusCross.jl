@@ -145,7 +145,11 @@ function save_catalog(
     compression::Union{Nothing,AbstractString}=nothing,
 )
     if compression !== nothing && compression != "gzip"
-        throw(ArgumentError("unsupported compression $(repr(compression)); use nothing or \"gzip\""))
+        throw(
+            ArgumentError(
+                "unsupported compression $(repr(compression)); use nothing or \"gzip\""
+            ),
+        )
     end
     h5open(path, "w") do f
         a = attributes(f)
@@ -161,7 +165,8 @@ function save_catalog(
         write(f, "frequencies", catalog.frequencies)
         pol = create_group(f, "polarizations")
         chunk = _chunk_dims(nfreq(catalog), nsamples(catalog))
-        dataset_kwargs = compression == "gzip" ? (; chunk=chunk, deflate=3) : (; chunk=chunk)
+        dataset_kwargs =
+            compression == "gzip" ? (; chunk=chunk, deflate=3) : (; chunk=chunk)
         for (name, data) in (("plus", catalog.plus), ("cross", catalog.cross))
             # Julia's (nfreq, nsamples) column-major matrix lands on disk as the
             # spec's (nsamples, nfreq) C-order dataspace with no transpose.
