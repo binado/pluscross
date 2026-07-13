@@ -1,6 +1,6 @@
 [project]
 name = "pluscross"
-version = "0.1.0"
+version = "0.2.0"
 description = "IO for the waveform_catalog HDF5 format: frequency-domain waveform polarization catalogs"
 readme = "README.md"
 requires-python = ">=3.11"
